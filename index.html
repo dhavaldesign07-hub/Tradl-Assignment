@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>FinFlix Prototype</title>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Manrope,system-ui,sans-serif;background:#1E2024;min-height:100vh;display:flex;align-items:center;justify-content:center;gap:56px;padding:24px}
+.side{max-width:300px;color:#C9CDD2;font-size:14px;line-height:1.6}.side h1{font-size:26px;color:#fff;margin-bottom:8px}.side p{margin-bottom:12px}.side b{color:#fff}
+.side button{font:inherit;color:#fff;background:none;border:1px solid #444;border-radius:20px;padding:9px 16px;cursor:pointer}
+.phone{width:384px;height:804px;border-radius:52px;background:#000;padding:12px;box-shadow:0 30px 80px rgba(0,0,0,.6),inset 0 0 0 2px #333;flex:none}
+.screen{width:360px;height:780px;border-radius:40px;overflow:hidden;background:#0F1115;position:relative}
+.view{position:absolute;inset:0;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;scrollbar-width:none}.view::-webkit-scrollbar{display:none}
+.view img{display:block;width:100%}
+.hot{position:absolute;cursor:pointer;background:none;border:0;border-radius:12px}
+.show .hot{outline:2px solid rgba(77,154,255,.7);background:rgba(77,154,255,.12)}
+.push{animation:push .28s ease}@keyframes push{from{transform:translateX(60px);opacity:0}}
+.pop{animation:pop .22s ease}@keyframes pop{from{opacity:0}}
+.up{animation:up .3s ease}.up2{animation:up2 .3s ease}@keyframes up2{from{transform:translateY(40%);opacity:0}}@keyframes up{from{transform:translate(-50%,40%);opacity:0}}
+@media (max-width:820px){html,body{height:100%;overflow:hidden;overscroll-behavior:none}body{padding:0;display:block}.side{display:none}.phone{position:fixed;inset:0;width:100%;height:100dvh;border-radius:0;padding:0;box-shadow:none}.screen{width:100%;height:100%;border-radius:0}}
+</style>
+</head>
+<body>
+<div class="side">
+<h1>FinFlix</h1>
+<p>Clickable prototype of the Tradl design exercise: from <b>"what do I look at today?"</b> to <b>"I understand this idea"</b>.</p>
+<p><b>Main flow:</b> tap <b>Tap, Scan, Pay</b> → <b>One97 (Paytm)</b> → <b>Ask AI</b> or <b>Save</b> → <b>Save to My Ideas</b> → <b>Back to Home</b>.</p>
+<p>Only the main flow is clickable. All data is sample data.</p>
+<button onclick="go('home','pop')">Restart</button> <button onclick="document.body.classList.toggle('show')">Show tap areas</button>
+</div>
+<div class="phone"><div class="screen" id="screen"></div></div>
+<script>
+// [x, y, w, h, target] in Figma frame coordinates (frames are 360 wide)
+const SCREENS={
+ home:[[16,211,328,143,'theme']],
+ theme:[[0,8,120,36,'home'],[16,1040,328,56,'stock']],
+ stock:[[0,8,170,36,'theme'],[16,1009,159,44,'save'],[185,1009,159,46,'ask']],
+ done:[[16,574,328,46,'home']]};
+// screens that show the fixed bottom navigation
+const FOOT={home:1,theme:1,stock:1};
+// bottom sheets: static, pinned to the bottom over a dimmed page: [sheet height, hot areas in sheet coords]
+const SHEETS={ask:[772,[[312,12,44,40,'stock']]],save:[556,[[312,12,44,40,'stock'],[16,466,328,46,'done']]]};
+const ANIM={theme:'push',stock:'push',ask:'up',save:'up',done:'pop',home:'pop'};
+function go(name,anim){const sc=document.getElementById('screen');const s=sc.clientWidth/360;if(SHEETS[name])return sheet(sc,name,s);
+ sc.innerHTML=`<div class="view ${anim||ANIM[name]}"><div style="position:relative;padding-bottom:${FOOT[name]&&name!=='home'?78*s:0}px"><img src="screens/${name}.jpg" alt="${name}">${SCREENS[name].map(([x,y,w,h,t])=>`<button class="hot" aria-label="${t}" style="left:${x*s}px;top:${y*s}px;width:${w*s}px;height:${h*s}px" onclick="go('${t}')"></button>`).join('')}</div></div>${foot(name,s)}`}
+function foot(n,s){if(!FOOT[n])return '';return `<div style="position:absolute;left:0;right:0;bottom:0;height:${78*s}px;z-index:6"><img src="screens/home-footer.jpg" alt="" style="width:100%;display:block"></div>`}
+function sheet(sc,n,s){const[H,hot]=SHEETS[n];const k=Math.min(s,(sc.clientHeight-8)/H);sc.innerHTML=`<div class="view pop" style="overflow:hidden"><img src="screens/overlay.jpg" alt=""></div><div class="up2" style="position:absolute;bottom:0;left:0;right:0;height:${H*k}px;background:#1A1C23;border-radius:${24*k}px ${24*k}px 0 0;z-index:7;overflow:hidden"><div style="position:relative;margin:0 auto;width:${360*k}px"><img src="screens/${n}-sheet.png" alt="${n}" style="width:100%;display:block">${hot.map(([x,y,w,h,t])=>`<button class="hot" aria-label="${t}" style="left:${x*k}px;top:${y*k}px;width:${w*k}px;height:${h*k}px" onclick="go('${t}')"></button>`).join('')}</div></div>`}
+function fit(){document.querySelector('.phone').style.zoom=innerWidth<=820?1:Math.min(1,(innerHeight-40)/804)}
+addEventListener('resize',fit);fit();
+['theme.jpg','stock.jpg','overlay.jpg','ask-sheet.png','save-sheet.png','done.jpg'].forEach(f=>{new Image().src=`screens/${f}`});
+go('home','pop');
+</script>
+</body>
+</html>
